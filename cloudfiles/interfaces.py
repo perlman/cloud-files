@@ -597,6 +597,9 @@ class HttpInterface(StorageInterface):
     self._path = path
     if request_payer is not None:
       raise ValueError("Specifying a request payer for the HttpInterface is not supported. request_payer must be None, got '{}'.".format(request_payer))
+    self._session = requests.Session()
+    if secrets:
+      self._session.headers.update(secrets)
 
   def get_path_to_file(self, file_path):
     return posixpath.join(self._path.host, self._path.path, file_path)
@@ -604,7 +607,8 @@ class HttpInterface(StorageInterface):
   @retry
   def delete_file(self, file_path):
     key = self.get_path_to_file(file_path)
-    requests.delete(key)
+    response = self._session.delete(key)
+    response.raise_for_status()
 
   def delete_files(self, file_paths):
     for path in file_paths:
@@ -614,7 +618,8 @@ class HttpInterface(StorageInterface):
   def put_file(self, file_path, content, content_type,
                compress, cache_control=None, storage_class=None):
     key = self.get_path_to_file(file_path)
-    requests.put(key, data=content)
+    response = self._session.put(key, data=content)
+    response.raise_for_status()
 
   @retry
   def head(self, file_path):
