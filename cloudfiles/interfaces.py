@@ -601,17 +601,20 @@ class HttpInterface(StorageInterface):
   def get_path_to_file(self, file_path):
     return posixpath.join(self._path.host, self._path.path, file_path)
 
-  # @retry
+  @retry
   def delete_file(self, file_path):
-    raise NotImplementedError()
+    key = self.get_path_to_file(file_path)
+    requests.delete(key)
 
   def delete_files(self, file_paths):
-    raise NotImplementedError()
+    for path in file_paths:
+      self.delete_file(path)
 
-  # @retry
+  @retry
   def put_file(self, file_path, content, content_type,
                compress, cache_control=None, storage_class=None):
-    raise NotImplementedError()
+    key = self.get_path_to_file(file_path)
+    requests.put(key, data=content)
 
   @retry
   def head(self, file_path):
